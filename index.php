@@ -23,18 +23,27 @@ $books = [
     ["Ensayo sobre la ceguera", "José Saramago", 1995],
     ["El beso de la mujer araña", "Manuel Puig", 1976],
 ];
-
+//paginador de libros
 $totalBooks = count($books);
 $booksPage = 4; // Libros por página
 $totalPages = ceil($totalBooks / $booksPage); // ceil redondea hacia arriba
 $page = isset($_GET['page']) ? (int) $_GET['page'] : 1; // Página por defecto
 $startIndex = ($page - 1) * $booksPage; // Índice de inicio
 $booksToShow = array_slice($books, $startIndex, $booksPage); // Libros a mostrar
+//paginador de revistas
+$totalMagazines = count($manager->getMagazines());
+$magazinesPage = 4; // Revistas por página
+$totalMagazinePages = ceil($totalMagazines / $magazinesPage); // ceil redondea hacia arriba
+$magazinePage = isset($_GET['magazine_page']) ? (int) $_GET['magazine_page'] : 1; // Página por defecto para revistas
+$magazineStartIndex = ($magazinePage - 1) * $magazinesPage; // Índice de inicio para revistas
+$magazinesToShow = array_slice($manager->getMagazines(), $magazineStartIndex, $magazinesPage); // Revistas a mostrar
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Lógica de agregar y eliminar
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'add':
+                // Lógica para agregar
                 $title = $_POST['title'] ?? '';
                 $author = $_POST['author'] ?? '';
                 $year = (int) ($_POST['year'] ?? 0);
@@ -49,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'delete':
+                // Lógica para eliminar
                 $index = (int) ($_POST['index'] ?? -1);
                 $var = $_POST['var'] ?? '';
 
@@ -130,22 +140,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <h2>Listado de Revistas</h2>
-        <?php if (count($manager->getMagazines()) == 0): ?>
+        <?php
+        $totalMagazines = count($manager->getMagazines()); // Total de revistas
+        $magazinesPage = 4; // Revistas por página
+        $totalMagazinePages = ceil($totalMagazines / $magazinesPage); // Total de páginas de revistas
+        $magazinePage = isset($_GET['magazine_page']) ? (int) $_GET['magazine_page'] : 1;
+        $magazineStartIndex = ($magazinePage - 1) * $magazinesPage; // Índice de inicio para revistas
+        $magazinesToShow = array_slice($manager->getMagazines(), $magazineStartIndex, $magazinesPage); // Revistas a mostrar
+        
+        if ($totalMagazines == 0): ?>
             <p>No hay revistas registradas.</p>
         <?php else: ?>
             <ul>
-                <?php foreach ($manager->getMagazines() as $index => $magazine): ?>
+                <?php foreach ($magazinesToShow as $index => $magazine): ?>
                     <li>
                         <?php echo "Título: " . $magazine->getTitle() . ", Autor: " . $magazine->getAuthor() . ", Año: " . $magazine->getYear() . ", Tipo: " . $magazine->getType(); ?>
                         <form method="POST" class="delete-form" style="display:inline;">
                             <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="index" value="<?php echo $index; ?>">
+                            <input type="hidden" name="index" value="<?php echo $magazineStartIndex + $index; ?>">
                             <input type="hidden" name="var" value="<?php echo $magazine->getType(); ?>">
                             <button type="submit">Eliminar</button>
                         </form>
                     </li>
                 <?php endforeach; ?>
             </ul>
+
+            <div>
+                <?php if ($magazinePage > 1): ?>
+                    <a href="?magazine_page=1">
+                        <<< /a>
+                            <a href="?magazine_page=<?php echo $magazinePage - 1; ?>">
+                                << /a>
+                                <?php endif; ?>
+                                <span> Página <?php echo $magazinePage; ?> de <?php echo $totalMagazinePages; ?></span>
+                                <?php if ($magazinePage < $totalMagazinePages): ?>
+                                    <a href="?magazine_page=<?php echo $magazinePage + 1; ?>"> > </a>
+                                    <a href="?magazine_page=<?php echo $totalMagazinePages; ?>"> >> </a>
+                                <?php endif; ?>
+            </div>
         <?php endif; ?>
     </body>
 
